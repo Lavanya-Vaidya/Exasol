@@ -2,35 +2,37 @@
 
 ## Adaptive Engine for Guarding, Intelligence & Security
 
-> **An interactive threat intelligence and containment platform powered by Machine Learning, Exasol, and relationship intelligence.**
-
-AEGIS is designed to investigate suspicious activity beyond a single event.
-
-Instead of asking only:
-
-> **"Is this transaction risky?"**
-
-AEGIS asks:
-
-> **"What does this activity connect to, how is the threat likely to evolve, and what should we do next?"**
-
-It combines behavioural machine learning, Exasol-powered transaction intelligence, and SHADOWNET relationship analysis into a single interactive investigation console.
+**AEGIS is an interactive threat intelligence and containment platform that combines Machine Learning, Exasol, and relationship intelligence to detect, investigate, predict, and respond to suspicious activity.**
 
 ---
 
-# Overview
+# Problem
 
-Fraud and cyber threats rarely exist as isolated events.
+Fraud and cyber threats rarely appear as isolated events.
 
-A transaction may appear harmless on its own while its surrounding infrastructure reveals:
+A single transaction may look normal when evaluated independently. However, the activity around it can reveal a much larger threat:
 
-- multiple connected accounts
-- shared devices
-- repeated transaction behaviour
+- multiple accounts sharing the same device
+- suspicious transaction clusters
 - abnormal behavioural patterns
-- suspicious threat sequences
+- repeated activity from compromised infrastructure
+- coordinated movement across related entities
 
-AEGIS connects these signals into a unified investigation.
+Traditional detection systems often stop at:
+
+> **"Is this transaction suspicious?"**
+
+The bigger question is:
+
+> **"What is this transaction connected to, what is likely to happen next, and what should we do about it?"**
+
+AEGIS is built to answer that question.
+
+---
+
+# Solution
+
+AEGIS combines three layers of intelligence:
 
 ```text
                  TRANSACTION
@@ -39,7 +41,7 @@ AEGIS connects these signals into a unified investigation.
               ┌───────────────┐
               │    EXASOL     │
               │ Transaction   │
-              │ Intelligence │
+              │ Intelligence  │
               └───────┬───────┘
                       │
               ┌───────┴────────┐
@@ -59,50 +61,43 @@ AEGIS connects these signals into a unified investigation.
                └──────┬───────┘
                       │
                       ▼
-              ┌──────────────┐
-              │ Risk + Threat│
-              │  Prediction  │
-              └──────┬───────┘
+               RISK + PREDICTION
                       │
                       ▼
-              ┌──────────────┐
-              │  RESPONSE /  │
-              │ CONTAINMENT  │
-              └──────────────┘
+                  RESPONSE
+                      │
+                      ▼
+                 CONTAINMENT
 ```
+
+The result is an investigation workflow rather than a simple fraud score.
 
 ---
 
-# Core Features
+# What AEGIS Does
 
 ## 1. Behavioural Threat Detection
 
-The AEGIS ML engine evaluates behavioural characteristics and provides a threat score.
+The AEGIS ML engine evaluates behavioural characteristics and produces a threat assessment.
 
-The platform supports multiple investigation scenarios:
+The dashboard supports four investigation scenarios:
 
 | Scenario | Purpose |
 |---|---|
-| Normal Behaviour | Routine activity with low behavioural risk |
-| Suspicious Behaviour | Potential anomaly requiring investigation |
-| Coordinated Fraud | Connected activity across multiple entities |
-| Compromised Host | Behaviour associated with endpoint compromise |
+| **Normal Behaviour** | Routine activity with low behavioural risk |
+| **Suspicious Behaviour** | Potential anomaly requiring investigation |
+| **Coordinated Fraud** | Connected activity across multiple entities |
+| **Compromised Host** | Behaviour associated with endpoint compromise |
 
-The selected scenario automatically maps to an appropriate real transaction from the Exasol transaction feed.
+The selected scenario automatically maps to an appropriate transaction from the real Exasol transaction feed.
 
 ---
 
-## 2. Exasol-Powered Transaction Intelligence
+## 2. Exasol Transaction Intelligence
 
-AEGIS retrieves real transaction records from the Exasol `ACTIVITIES` table.
+AEGIS retrieves transaction data from the Exasol `ACTIVITIES` table.
 
-Transactions are ordered by their actual database risk:
-
-```text
-BASE_RISK DESC
-```
-
-The transaction feed exposes:
+The transaction feed contains:
 
 ```text
 Transaction ID
@@ -111,58 +106,45 @@ Device ID
 Base Risk
 ```
 
-This keeps the investigation grounded in the underlying database instead of relying on fabricated transaction identifiers.
+Transactions are ordered by their actual database risk:
+
+```text
+BASE_RISK DESC
+```
+
+This means the dashboard works with real transaction records and their real database-level risk rather than hard-coded demo transactions.
 
 ---
 
 ## 3. SHADOWNET Relationship Intelligence
 
-SHADOWNET reveals hidden relationships surrounding a selected transaction.
+SHADOWNET correlates entities surrounding the selected transaction.
 
-It correlates entities such as:
+For example:
 
 ```text
-ACCOUNT
-   │
-   ├──────── USES ──────── DEVICE
-   │
-   └──── INITIATED ───── TRANSACTION
+ACCOUNT A1
+    │
+    ├──────── USES ──────── DEVICE D19
+    │
+    └──── INITIATED ───── TRANSACTION T3
+                               │
+ACCOUNT A2 ───── USES ─────────┘
+                               │
+ACCOUNT A3 ───── USES ─────────┘
 ```
 
-This allows AEGIS to identify clusters that may not be obvious from an isolated transaction.
+This exposes relationships that may not be obvious from a single transaction.
 
-The graph is generated from the selected transaction's relationship data.
+The dashboard turns those relationships into an interactive graph.
 
 ---
 
-## 4. AEGIS Fusion Engine
+## 4. Threat Prediction
 
-AEGIS combines behavioural and relationship intelligence into a single risk assessment.
+AEGIS does not stop at detection.
 
-```text
-Behavioural ML Risk      × 60%
-SHADOWNET Network Risk   × 40%
-                            │
-                            ▼
-                     AEGIS Final Risk
-```
-
-The resulting risk drives the final response:
-
-```text
-LOW        → ALLOW
-MEDIUM     → REVIEW
-HIGH       → MONITOR
-CRITICAL   → BLOCK
-```
-
----
-
-## 5. Threat Prediction
-
-AEGIS goes beyond detection.
-
-The platform also predicts what could happen next based on the observed transaction cluster and behavioural signals.
+Based on the observed transaction cluster and behavioural intelligence, it predicts a possible next action.
 
 Examples include:
 
@@ -182,17 +164,43 @@ Repeat transaction from compromised endpoint
 Probe account for additional suspicious activity
 ```
 
-This shifts the workflow from reactive detection toward proactive threat intelligence.
+This allows the system to move from reactive detection toward proactive threat intelligence.
+
+---
+
+## 5. AEGIS Fusion Engine
+
+AEGIS combines behavioural and relationship intelligence into a final assessment.
+
+```text
+Behavioural ML Risk      × 60%
+SHADOWNET Network Risk   × 40%
+                            │
+                            ▼
+                     AEGIS Final Risk
+```
+
+The resulting risk drives the response:
+
+```text
+LOW        → ALLOW
+MEDIUM     → REVIEW
+HIGH       → MONITOR
+CRITICAL   → BLOCK
+```
+
+The Exasol `BASE_RISK` remains visible as a separate transaction-level signal.
 
 ---
 
 ## 6. Explainable Investigation
 
-AEGIS exposes the signals contributing to its assessment.
+AEGIS exposes the signals that contribute to the investigation.
 
 Analysts can inspect:
 
 - behavioural risk
+- Exasol base risk
 - shared infrastructure
 - linked-account density
 - transaction clustering
@@ -200,15 +208,13 @@ Analysts can inspect:
 - SHADOWNET relationships
 - combined AEGIS risk
 
-The interface also allows individual graph entities to be selected for deeper inspection.
+Entities in the SHADOWNET graph can also be selected to inspect their relationships.
 
 ---
 
 ## 7. Interactive Containment
 
-Once the threat has been evaluated, AEGIS provides a response recommendation.
-
-The investigation flow becomes:
+AEGIS connects detection directly to response.
 
 ```text
 DETECT
@@ -224,7 +230,125 @@ RESPOND
 CONTAIN
 ```
 
-The dashboard includes a containment simulation to demonstrate how the platform transitions from intelligence to action.
+The dashboard provides a containment simulation to demonstrate the final response stage.
+
+---
+
+# Why Exasol?
+
+Exasol is used as the **transaction intelligence and relationship analysis layer** of AEGIS.
+
+Instead of treating the ML model as the entire system, AEGIS uses Exasol to hold and query the structured investigation data around an event.
+
+In this project, Exasol is responsible for:
+
+1. Storing transaction activity.
+2. Storing account and device relationships.
+3. Retrieving real transactions for investigation.
+4. Correlating transactions that share infrastructure.
+5. Providing threat-pattern information.
+6. Providing response simulation data.
+7. Feeding structured intelligence into the AEGIS API.
+
+The application connects to Exasol from Python using `pyexasol`.
+
+---
+
+# How Exasol Personal Is Used
+
+AEGIS uses **Exasol Personal** as the database environment for the project.
+
+Exasol Personal is Exasol's free, single-user edition for personal use and development. It provides the same Exasol database engine used for analytics workloads and can run in an individual's own environment or supported cloud infrastructure. citeturn281745search0turn281745search9
+
+For AEGIS, the Exasol Personal instance hosts the project's `SHADOWNET` schema and its investigation data.
+
+### Data stored in Exasol
+
+The AEGIS backend works with tables including:
+
+```text
+SHADOWNET
+│
+├── ACTIVITIES
+│   ├── TX_ID
+│   ├── ACCOUNT_ID
+│   ├── DEVICE_ID
+│   └── BASE_RISK
+│
+├── THREAT_PATTERNS
+│   ├── SEQUENCE_TYPE
+│   └── THREAT_MULTIPLIER
+│
+└── SANDBOX_LOGS
+    ├── SIMULATED_ACTION
+    ├── FRAUD_PREVENTED_EST
+    └── COLLATERAL_IMPACT
+```
+
+### Application flow
+
+```text
+Exasol Personal
+      │
+      │ SQL queries
+      ▼
+Python / Flask API
+      │
+      ├───────────────┐
+      ▼               ▼
+AEGIS ML          SHADOWNET
+      │               │
+      └───────┬───────┘
+              ▼
+        React Dashboard
+```
+
+The backend connects to Exasol using environment variables:
+
+```env
+EXASOL_DSN=YOUR_EXASOL_DSN
+EXASOL_USER=YOUR_EXASOL_USER
+EXASOL_PASSWORD=YOUR_EXASOL_PASSWORD
+EXASOL_SCHEMA=SHADOWNET
+```
+
+This keeps database configuration outside the source code.
+
+Exasol's current documentation describes Exasol Personal as a free, single-user edition and provides quick-start guidance for connecting and loading data. citeturn281745search1turn281745search4
+
+---
+
+# Architecture
+
+```text
+┌────────────────────────────────────────────────────────────┐
+│                     AEGIS DASHBOARD                        │
+│                                                            │
+│ Scenario Control │ Transaction Feed │ SHADOWNET │ Action  │
+└────────┬─────────┴─────────┬────────┴──────┬────┴─────────┘
+         │                   │               │
+         └───────────────────┼───────────────┘
+                             ▼
+                    ┌─────────────────┐
+                    │    Flask API    │
+                    │                 │
+                    │ /health         │
+                    │ /transactions   │
+                    │ /analyze        │
+                    └────────┬────────┘
+                             │
+                 ┌───────────┴───────────┐
+                 │                       │
+                 ▼                       ▼
+        ┌────────────────┐      ┌─────────────────┐
+        │  AEGIS ML      │      │ Exasol Personal │
+        │                │      │                 │
+        │ model.pkl      │      │ SHADOWNET       │
+        │ features.pkl   │      │ ACTIVITIES      │
+        └────────────────┘      │ THREAT_PATTERNS │
+                                │ SANDBOX_LOGS    │
+                                └─────────────────┘
+```
 
 ---
 
@@ -266,7 +390,7 @@ The dashboard includes a containment simulation to demonstrate how the platform 
 - Vite
 - JavaScript
 - CSS
-- SVG-based interactive relationship visualization
+- SVG-based interactive graph
 
 ## Backend
 
@@ -283,47 +407,16 @@ The dashboard includes a containment simulation to demonstrate how the platform 
 - NumPy
 - joblib
 
-## Data Platform
+## Database
 
-- Exasol
+- Exasol Personal
 
-## Intelligence Layer
+## Intelligence
 
 - AEGIS ML Engine
 - SHADOWNET
 - Threat Pattern Analysis
 - Response Simulation
-
----
-
-# Architecture
-
-```text
-┌───────────────────────────────────────────────────────────┐
-│                    AEGIS DASHBOARD                        │
-│                                                           │
-│  Scenario Control   Transaction Feed   SHADOWNET Graph   │
-│        │                  │                   │            │
-└────────┼──────────────────┼───────────────────┼───────────┘
-         │                  │                   │
-         └──────────────────┼───────────────────┘
-                            ▼
-                     ┌─────────────┐
-                     │ Flask API   │
-                     │ /analyze    │
-                     │ /transactions│
-                     │ /health     │
-                     └──────┬──────┘
-                            │
-                ┌───────────┴───────────┐
-                │                       │
-                ▼                       ▼
-        ┌──────────────┐        ┌───────────────┐
-        │  ML Engine   │        │    Exasol     │
-        │ model.pkl    │        │   SHADOWNET   │
-        │ features.pkl │        │ Relationships │
-        └──────────────┘        └───────────────┘
-```
 
 ---
 
@@ -359,7 +452,20 @@ Exasol/
 
 ---
 
-# Getting Started
+# Setup
+
+## Prerequisites
+
+You need:
+
+- Python 3
+- Node.js and npm
+- access to your Exasol Personal database
+- the AEGIS repository
+
+For Exasol Personal, follow the current official Exasol Personal deployment/quick-start documentation for your environment. citeturn281745search1turn281745search2
+
+---
 
 ## 1. Clone the Repository
 
@@ -413,7 +519,7 @@ AEGIS_PORT=5001
 CORS_ORIGIN=http://localhost:5173
 ```
 
-The real `.env` file should never be committed to GitHub.
+Never commit the real `.env` file.
 
 ---
 
@@ -431,13 +537,13 @@ The API runs on:
 http://127.0.0.1:5001
 ```
 
-Health check:
+Check the backend:
 
 ```text
 http://127.0.0.1:5001/health
 ```
 
-Transaction feed:
+Check the Exasol transaction feed:
 
 ```text
 http://127.0.0.1:5001/transactions
@@ -466,13 +572,13 @@ Add:
 VITE_API_URL=http://127.0.0.1:5001
 ```
 
-Start the dashboard:
+Start the frontend:
 
 ```powershell
 npm run dev
 ```
 
-Open the Vite URL shown in the terminal.
+Open the Vite URL displayed in the terminal.
 
 ---
 
@@ -486,7 +592,7 @@ Returns service status.
 
 ## `GET /health`
 
-Returns backend and ML health information.
+Returns backend and ML status.
 
 Example:
 
@@ -504,7 +610,7 @@ Example:
 
 ## `GET /transactions`
 
-Returns real transaction records from Exasol.
+Returns real transactions from Exasol.
 
 Example:
 
@@ -523,15 +629,15 @@ Example:
 }
 ```
 
-Transactions are ordered by `BASE_RISK` in descending order.
+Transactions are returned in descending `BASE_RISK` order.
 
 ---
 
 ## `POST /analyze`
 
-Runs the complete AEGIS investigation for a selected transaction and threat scenario.
+Runs the complete AEGIS investigation.
 
-Example request:
+Example:
 
 ```json
 {
@@ -542,12 +648,12 @@ Example request:
 
 The response contains:
 
-- transaction information
+- transaction intelligence
 - ML risk
-- network risk
-- SHADOWNET graph
-- linked accounts
-- linked transactions
+- SHADOWNET network risk
+- graph nodes
+- graph edges
+- linked entities
 - threat sequence
 - predicted next action
 - recommended response
@@ -561,54 +667,58 @@ The response contains:
 ## Compromised Host
 
 ```text
-Scenario
-   ↓
 Compromised Host
-   ↓
+        │
+        ▼
 Highest-risk transaction
-   ↓
+        │
+        ▼
 Behavioural ML
-   ↓
-SHADOWNET
-   ↓
+        │
+        ▼
+SHADOWNET correlation
+        │
+        ▼
 AEGIS Fusion
-   ↓
+        │
+        ▼
 Critical Risk
-   ↓
+        │
+        ▼
 BLOCK
 ```
 
-The scenario controls the behavioural analysis while the transaction itself comes from the actual Exasol transaction feed.
+The transaction itself is selected from Exasol rather than being hard-coded into the scenario.
 
 ---
 
 # Risk Model
 
-AEGIS separates three different signals.
+AEGIS exposes three different risk concepts:
 
 ### Exasol Base Risk
 
-The risk stored against the transaction in the database.
+The database-level risk associated with the transaction.
 
 ### Behavioural ML Risk
 
-The output generated by the trained machine-learning model.
+The threat score produced by the trained AEGIS ML model.
 
 ### SHADOWNET Network Risk
 
-The risk derived from connected accounts, devices, and transaction relationships.
+The risk derived from relationships between accounts, devices, and transactions.
 
-The final AEGIS assessment combines the latter two intelligence layers:
+The AEGIS fusion score is:
 
 ```text
-ML Risk × 0.60
-+
-SHADOWNET Risk × 0.40
-=
 AEGIS Risk
+=
+(ML Risk × 0.60)
++
+(SHADOWNET Risk × 0.40)
 ```
 
-The Exasol Base Risk remains visible as an underlying transaction-level signal.
+The final response is then derived from the combined score.
 
 ---
 
@@ -624,36 +734,38 @@ venv/
 node_modules/
 dist/
 __pycache__/
+*.pyc
 ```
+
+Before publishing the repository, verify that no real database password or credential has been committed.
 
 For production deployment:
 
 - disable Flask debug mode
-- restrict CORS
+- restrict CORS to the actual frontend origin
 - use secure database credentials
-- rotate exposed credentials
 - enable HTTPS
 - use a production WSGI server
-- protect the Exasol connection
-- avoid exposing internal exception details
+- avoid returning internal exception details
+- rotate credentials if they were ever exposed
 
 ---
 
-# Future Roadmap
+# Future Improvements
 
 Potential extensions include:
 
 - live event streaming
 - real-time Exasol monitoring
 - graph-based anomaly detection
-- historical threat replay
 - transaction amount intelligence
-- automated alerting
+- historical threat replay
+- automated alerts
 - analyst case management
-- advanced explainable ML
+- advanced ML explainability
 - automated containment integrations
-- real-time threat feeds
 - persistent investigation history
+- real-time threat feeds
 
 ---
 
@@ -691,31 +803,29 @@ The goal is not simply to detect suspicious activity.
 
 The goal is to understand:
 
-- **why it matters**
-- **what it connects to**
-- **what could happen next**
-- **how to respond**
+**why it matters, what it connects to, what could happen next, and how to respond.**
 
 ---
 
-# Demo Assets
+# Demo Screenshots
 
-Screenshots and other visual assets can be stored under:
+Store project screenshots under:
 
 ```text
 docs/screenshots/
 ```
 
-Recommended files:
+Recommended filenames:
 
 ```text
-docs/screenshots/
-├── dashboard.png
-├── investigation.png
-├── shadownet.png
-├── risk-analysis.png
-└── containment.png
+dashboard.png
+investigation.png
+shadownet.png
+risk-analysis.png
+containment.png
 ```
+
+They can be added to this README later without changing the application.
 
 ---
 
