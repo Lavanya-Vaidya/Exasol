@@ -1,68 +1,168 @@
+import os
+import re
+
 import pyexasol
 
+
+# ============================================================
+# CONFIGURATION
+# ============================================================
+
+EXASOL_DSN = os.getenv("EXASOL_DSN", "13.233.255.53:8563")
+EXASOL_USER = os.getenv("EXASOL_USER")
+EXASOL_PASSWORD = os.getenv("EXASOL_PASSWORD")
+EXASOL_SCHEMA = os.getenv("EXASOL_SCHEMA", "SHADOWNET")
+
+TX_ID = "T4"
+
+TX_ID_PATTERN = re.compile(r"^[A-Za-z0-9_-]{1,64}$")
+
+
+# ============================================================
+# VALIDATION
+# ============================================================
+
+if not TX_ID_PATTERN.fullmatch(TX_ID):
+    raise ValueError(f"Invalid transaction ID: {TX_ID}")
+
+
+if not EXASOL_USER or not EXASOL_PASSWORD:
+    raise RuntimeError(
+        "Missing Exasol credentials.\n\n"
+        "Set them in PowerShell before running this script:\n"
+        '$env:EXASOL_USER="sys"\n'
+        '$env:EXASOL_PASSWORD="your-password"'
+    )
+
+
+# ============================================================
+# CONNECTION
+# ============================================================
+
+print("\nConnecting to Exasol...")
+
 conn = pyexasol.connect(
-    dsn="13.233.255.53:8563",
-    user="sys",
-    password="exasol",
+    dsn=EXASOL_DSN,
+    user=EXASOL_USER,
+    password=EXASOL_PASSWORD,
     websocket_sslopt={
         "cert_reqs": 0
     }
 )
 
-conn.execute("OPEN SCHEMA shadownet")
+print("✓ Connected")
 
-tx_id = "T1"
 
-# Get transaction and shared device information
-result = conn.execute(f"""
-    SELECT
-        A.TX_ID,
-        A.DEVICE_ID,
-        A.BASE_RISK,
-        COUNT(DISTINCT B.ACCOUNT_ID) AS LINKED_ACCOUNTS
-    FROM ACTIVITIES A
-    JOIN ACTIVITIES B
-        ON A.DEVICE_ID = B.DEVICE_ID
-    WHERE A.TX_ID = '{tx_id}'
-    GROUP BY
-        A.TX_ID,
-        A.DEVICE_ID,
-        A.BASE_RISK
-""")
+try:
+    conn.execute(
+        f"OPEN SCHEMA {EXASOL_SCHEMA}"
+    )
 
-transaction = result.fetchone()
+    print(f"✓ Schema: {EXASOL_SCHEMA}")
 
-print("\nTRANSACTION ANALYTICS:")
-print(transaction)
+    # ========================================================
+    # TRANSACTION + SHARED DEVICE
+    # ========================================================
 
-# Get highest threat pattern
-result = conn.execute("""
-    SELECT
-        SEQUENCE_TYPE,
-        THREAT_MULTIPLIER
-    FROM THREAT_PATTERNS
-    ORDER BY THREAT_MULTIPLIER DESC
-    LIMIT 1
-""")
+    result = conn.execute(
+        """
+        SELECT
+            A.TX_ID,
+            A.DEVICE_ID,
+            A.BASE_RISK,
+            COUNT(DISTINCT B.ACCOUNT_ID) AS LINKED_ACCOUNTS
+        FROM ACTIVITIES A
+        JOIN ACTIVITIES B
+            ON A.DEVICE_ID = B.DEVICE_ID
+        WHERE A.TX_ID = '{}'
+        GROUP BY
+            A.TX_ID,
+            A.DEVICE_ID,
+            A.BASE_RISK
+        """.format(
+            TX_ID.replace("'", "''")
+        )
+    )
 
-threat = result.fetchone()
+    transaction = result.fetchone()
 
-print("\nTHREAT PATTERN:")
-print(threat)
+    print("\n" + "=" * 60)
+    print("TRANSACTION ANALYTICS")
+    print("=" * 60)
 
-# Get recommended sandbox response
-result = conn.execute("""
-    SELECT
-        SIMULATED_ACTION,
-        FRAUD_PREVENTED_EST,
-        COLLATERAL_IMPACT
-    FROM SANDBOX_LOGS
-    LIMIT 1
-""")
+    if transaction:
+        tx_id, device_id, base_risk, linked_accounts = transaction
 
-response = result.fetchone()
+        print(f"Transaction ID : {tx_id}")
+        print(f"Device ID      : {device_id}")
+        print(f"Base Risk      : {base_risk}")
+        print(f"Linked Accounts: {linked_accounts}")
 
-print("\nSANDBOX RESPONSE:")
-print(response)
+    else:
+        print(f"No transaction found for {TX_ID}")
 
-conn.close()
+    # ========================================================
+    # THREAT PATTERN
+    # ========================================================
+
+    result = conn.execute(
+        """
+        SELECT
+            SEQUENCE_TYPE,
+            THREAT_MULTIPLIER
+        FROM THREAT_PATTERNS
+        ORDER BY THREAT_MULTIPLIER DESC
+        LIMIT 1
+        """
+    )
+
+    threat = result.fetchone()
+
+    print("\n" + "=" * 60)
+    print("THREAT PATTERN")
+    print("=" * 60)
+
+    if threat:
+        sequence_type, threat_multiplier = threat
+
+        print(f"Sequence Type   : {sequence_type}")
+        print(f"Threat Multiplier: {threat_multiplier}")
+
+    else:
+        print("No threat pattern found.")
+
+    # ========================================================
+    # SANDBOX RESPONSE
+    # ========================================================
+
+    result = conn.execute(
+        """
+        SELECT
+            SIMULATED_ACTION,
+            FRAUD_PREVENTED_EST,
+            COLLATERAL_IMPACT
+        FROM SANDBOX_LOGS
+        ORDER BY FRAUD_PREVENTED_EST DESC
+        LIMIT 1
+        """
+    )
+
+    response = result.fetchone()
+
+    print("\n" + "=" * 60)
+    print("SANDBOX RESPONSE")
+    print("=" * 60)
+
+    if response:
+        action, fraud_prevented, collateral = response
+
+        print(f"Action              : {action}")
+        print(f"Fraud Prevented Est.: ₹{fraud_prevented}")
+        print(f"Collateral Impact   : {collateral}")
+
+    else:
+        print("No sandbox response found.")
+
+finally:
+    conn.close()
+    print("\n✓ Connection closed")
